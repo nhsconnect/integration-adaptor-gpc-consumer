@@ -19,35 +19,38 @@ import uk.nhs.adaptors.gpc.consumer.gpc.GpcConfiguration;
 @Component
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class SspFilter implements GlobalFilter, Ordered {
-    static final int SSP_FILTER_ORDER = SdsFilter.SDS_FILTER_ORDER + 1;
+public class DirectGpcUrlFilter implements GlobalFilter, Ordered {
+    static final int DIRECT_FILTER_ORDER = SdsFilter.SDS_FILTER_ORDER - 1;
 
     private final GpcConfiguration gpcConfiguration;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        if (isSspEnabled()) {
-            URI uri = (URI) exchange.getAttributes()
-                .get(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR);
-
-            URI resolvedUri = uri.resolve(getSspUrlPrefix() + uri.toString());
+       if(isDirectGpcUrlEnabled()) {
+            URI requestUri = exchange.getRequest().getURI();
+            URI resolvedUri = requestUri.resolve(
+                requestUri
+                .toString()
+                .replace(gpcConfiguration.getGpcConsumerUrl(), getDirectGpcUrl())
+            );
 
             exchange.getAttributes()
                 .put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, resolvedUri);
         }
+
         return chain.filter(exchange);
     }
 
-    private String getSspUrlPrefix() {
-        return gpcConfiguration.getSspDomain();
+    private String getDirectGpcUrl() {
+        return gpcConfiguration.getGpcUrl();
     }
 
-    private boolean isSspEnabled() {
-        return StringUtils.isNotBlank(gpcConfiguration.getSspDomain());
+    private boolean isDirectGpcUrlEnabled() {
+        return StringUtils.isNotBlank(gpcConfiguration.getGpcUrl());
     }
 
     @Override
     public int getOrder() {
-        return SSP_FILTER_ORDER;
+        return DIRECT_FILTER_ORDER;
     }
 }
