@@ -52,10 +52,13 @@ public class SdsFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        if (StringUtils.isBlank(System.getProperty(GPC_URL_ENVIRONMENT_VARIABLE))) {
+        if (StringUtils.isBlank(System.getenv(GPC_URL_ENVIRONMENT_VARIABLE))) {
+            LOGGER.info("Using SDS API to perform service discovery of GPC Provider endpoint");
             ServerHttpRequest serverHttpRequest = exchange.getRequest();
-            extractInteractionId(serverHttpRequest.getHeaders())
-                .ifPresent(id -> proceedSdsLookup(serverHttpRequest, exchange, id));
+            String interactionId = extractInteractionId(serverHttpRequest.getHeaders());
+            proceedSdsLookup(serverHttpRequest, exchange, interactionId);
+        } else {
+            LOGGER.info("Using GP Provider endpoint specified by {}", GPC_URL_ENVIRONMENT_VARIABLE);
         }
 
         return chain.filter(exchange);
@@ -111,15 +114,15 @@ public class SdsFilter implements GlobalFilter, Ordered {
             .orElseThrow(() -> new IllegalArgumentException("URL does not contain ODS code in its second element"));
     }
 
-    private Optional<String> extractInteractionId(HttpHeaders httpHeaders) {
+    private String extractInteractionId(HttpHeaders httpHeaders) {
         if (httpHeaders.containsKey(SSP_INTERACTION_ID)) {
             List<String> interactionIds = httpHeaders.get(SSP_INTERACTION_ID);
 
             if (!CollectionUtils.isEmpty(interactionIds)) {
-                return Optional.of(interactionIds.get(0));
+                return interactionIds.get(0);
             }
         }
-        return Optional.empty();
+        throw new IllegalArgumentException("Request is missing required header: " + SSP_INTERACTION_ID);
     }
 
     private Optional<URI> prepareLookupUri(String address, ServerHttpRequest serverHttpRequest) {
