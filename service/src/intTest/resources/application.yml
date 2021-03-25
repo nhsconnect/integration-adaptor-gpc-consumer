@@ -31,7 +31,7 @@ gpc-consumer:
     findPatientPath: ${GPC_CONSUMER_GPC_GET_PATIENT_PATH:/*/STU3/1/gpconnect/documents/Patient}
     documentPath: ${GPC_CONSUMER_GPC_GET_DOCUMENT_PATH:/*/STU3/1/gpconnect/documents/Binary/**}
     structuredFhirBasePathRegex: (.*?)\/STU3/1/gpconnect/(.*?)\/
-    sspDomain: ""
+    sspDomain: ${GPC_CONSUMER_SSP_FQDN:https://proxy.opentest.hscic.gov.uk/}
   sds:
     url: ${GPC_CONSUMER_SDS_URL:http://localhost:8210/}
     apiKey: ${GPC_CONSUMER_SDS_APIKEY}

@@ -2,6 +2,7 @@ package uk.nhs.adaptors.gpc.consumer;
 
 import java.time.Duration;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,6 +22,7 @@ public class CloudGatewayRouteBaseTest {
     private static final String LOCALHOST_URI = "http://localhost:";
     protected static final WireMockServer WIRE_MOCK_SERVER = new WireMockServer(WIREMOCK_PORT);
     protected static final String GPC_URL_ENVIRONMENT_VARIABLE_NAME = "GPC_CONSUMER_GPC_GET_URL";
+    protected static final String GPC_CONSUMER_SSP_FQDN_VARIABLE = "GPC_CONSUMER_SSP_FQDN";
     protected static final String ENDPOINT = "/Endpoint";
     protected static final String SSP_FROM_HEADER = "Ssp-From";
     protected static final String SSP_TO_HEADER = "Ssp-To";
@@ -60,11 +62,13 @@ public class CloudGatewayRouteBaseTest {
             .responseTimeout(Duration.ofSeconds(MAX_TIMEOUT))
             .baseUrl(baseUri)
             .build();
+        System.setProperty(GPC_CONSUMER_SSP_FQDN_VARIABLE, WIRE_MOCK_SERVER.baseUrl());
     }
 
     @AfterEach
     public void tearDown() {
         WIRE_MOCK_SERVER.resetAll();
         System.clearProperty(GPC_URL_ENVIRONMENT_VARIABLE_NAME);
+        System.clearProperty(GPC_CONSUMER_SSP_FQDN_VARIABLE);
     }
 }
